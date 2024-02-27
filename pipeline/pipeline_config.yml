@@ -1,0 +1,9 @@
+# A yaml file that contains the configuration for the pipeline
+server_url: 'serenity.ifas.ufl.edu'
+folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data/input'
+model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20220910_182547/species_model.pl'
+test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized.csv'
+images_to_annotate_dir: '/blue/ewhite/everglades/label_studio/images_to_annotate'
+checkpoint_dir: '/blue/ewhite/everglades/Zooniverse/'
+train_dir: '/blue/ewhite/everglades/Zooniverse/'
+annotated_images_dir: '/blue/ewhite/everglades/label_studio/annotated_images'

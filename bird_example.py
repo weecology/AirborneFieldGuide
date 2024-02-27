@@ -1,4 +1,4 @@
-from src import FieldGuide
+from bioclip_example import FieldGuide
 import glob
 from matplotlib import pyplot as plt
 
