@@ -1,5 +1,4 @@
 # Airborne Field Guide
-A deepforest object detection active learning tool
 
 # Installation
 
@@ -23,8 +22,7 @@ Human review is here to stay. We need rapid model integration to create faster l
 * On new mission, draw a bounding box of geographic area, query the ebird API/map of life/Inaturalist to get abundance curve and filter species list.
 
 # Remaining questions
-* Local installer?
-* How to learn from AIDE? Should we just merge with there?
-* How to learn from fathomnet?
-* https://www.tator.io/? Another option.
-* BioCLIP foundation model -> https://arxiv.org/abs/2311.18803
+* Local Desktop installer? Especially for field researchers around the world? A stripped down version.
+* How to learn from [AIDE](https://github.com/microsoft/aerial_wildlife_detection)? From [Scout](https://www.wildme.org/scout.html)? [Fathomnet Portal](https://fathomnet.org/fathomnet/#/), [SAM-geo](https://github.com/opengeos/segment-geospatial). Should we just merge with there? How do we promote community collaboration and avoid re-invention. 
+* https://www.tator.io/? Another option.  
+* BioCLIP foundation model -> https://arxiv.org/abs/2311.18803 versus more bespoke models? Engaging teams INat/Ebirds teams.
