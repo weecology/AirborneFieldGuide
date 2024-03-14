@@ -2,14 +2,21 @@
 
 #cpu workers for data loaders
 #Dataloaders
-workers: 10
-gpus: 1
-distributed_backend: gpu
+workers: 5
+accelerator: auto
 batch_size: 8
+devices: auto
 
-#Non-max supression of overlapping predictions
-nms_thresh: 0.5
-score_thresh: 0.3
+
+# Model Architecture
+architecture: 'retinanet'
+num_classes: 1
+nms_thresh: 0.05
+
+# Architecture specific params
+retinanet:
+    # Non-max supression of overlapping predictions
+    score_thresh: 0.1
 
 train:
 
@@ -17,15 +24,15 @@ train:
     root_dir:
 
     #Optomizer  initial learning rate
-    lr: 0.001
+    lr: 0.01
 
     #Print loss every n epochs
-    epochs: 62
+    epochs: 20
     #Useful debugging flag in pytorch lightning, set to True to get a single batch of training to test settings.
     fast_dev_run: False
 
     #pin images to GPU memory for fast training. This depends on GPU size and number of images.
-    preload_images: False
+    preload_images: True
 
 validation:
     #callback args

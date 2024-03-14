@@ -1,0 +1,31 @@
+# A yaml file that contains the configuration for the pipeline
+
+# Remote server for image hosting
+user: 'ben'
+server_url: 'serenity.ifas.ufl.edu'
+key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
+folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
+
+# Model Training
+# Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
+model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20220910_182547/species_model.pl'
+test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized_no_nan.csv'
+images_to_annotate_dir: '/blue/ewhite/everglades/label_studio/drone/images_to_annotate'
+checkpoint_dir: '/blue/ewhite/everglades/Zooniverse/'
+train_csv_folder: /blue/ewhite/everglades/label_studio/drone/annotated_images/csvs
+
+# Active learning
+annotated_images_dir: '/blue/ewhite/everglades/label_studio/drone/annotated_images'
+#annotation_csv: /blue/ewhite/everglades/label_studio/drone/annotated_images/train_20231214_093907.csv
+annotation_csv:
+patch_size: 1500
+patch_overlap: 0.05
+min_score: 0.3
+
+# Label studio
+label-studio-url: "https://labelstudio.naturecast.org/"
+label-studio-project: "everglades-annotation"
+
+# Debugging
+force_run: True
+skip_train: True
