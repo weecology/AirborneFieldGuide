@@ -18,8 +18,9 @@ Human review is here to stay. We need rapid model integration to create faster l
 * Pre-computed zoom levels based on detection density -> https://openaccess.thecvf.com/content_CVPRW_2020/papers/w11/Li_Density_Map_Guided_Object_Detection_in_Aerial_Images_CVPRW_2020_paper.pdf
 * Nightly model training and re-labeling, re-clustering.
 * Label propogation at the image level. If I click on one animal in a flock/herd, it should auto-update nearby objects.
-* Lable propogation at the annotation level, using SAM to go between points, boxes, and polygons.
+* Label propogation at the annotation level, using SAM to go between points, boxes, and polygons.
 * On new mission, draw a bounding box of geographic area, query the ebird API/map of life/Inaturalist to get abundance curve and filter species list.
+* Double counting among images using keypoints
 
 # Remaining questions
 * Local Desktop installer? Especially for field researchers around the world? A stripped down version.
