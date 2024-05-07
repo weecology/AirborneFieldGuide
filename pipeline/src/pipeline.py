@@ -22,8 +22,9 @@ def config_pipeline(config):
         label_studio_url=config["label-studio-url"],
         force_run=config["force_run"],
         skip_train=config["skip_train"],
-        min_score=config["min_score"]
-    )
+        min_score=config["min_score"],
+        n_images = config["n_images"],
+        strategy = config["strategy"])
 
 def iterate(
         checkpoint_dir,
@@ -39,11 +40,14 @@ def iterate(
         label_studio_url,
         label_studio_project_name,
         train_csv_folder,
+        strategy="random",
+        n_images=5,
         min_score=0.3,
         model_checkpoint=None,
         annotation_csv=None,
         force_run=False,
-        skip_train=False):
+        skip_train=False,
+        dask_client=None):
     """A Deepforest pipeline for rapid annotation and model iteration.
 
     Args:
@@ -64,6 +68,11 @@ def iterate(
         min_score: The minimum score for a prediction to be included in the annotation platform.
         force_run: If True, will run the pipeline even if there are no new annotations. Defaults to False.
         skip_train: If True, will skip training the model. Defaults to False.
+        strategy: The strategy for choosing images. Available strategies are:
+            - "random": Choose images randomly from the pool.
+            - "most-detections": Choose images with the most detections based on predictions.
+        n_images: The number of images to choose.
+        dask_client: A dask distributed client for parallel prediction. Defaults to None.
     Returns:
         None
     """
@@ -119,7 +128,17 @@ def iterate(
             data.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
 
         # Choose local images to annotate
-        images = active_learning.choose_images(image_dir=images_to_annotate_dir, evaluation=None, strategy="random", n=10)
+        images = active_learning.choose_images(
+            image_dir=images_to_annotate_dir,
+            evaluation=None,
+            strategy=strategy,
+            n=n_images,
+            m=m,
+            patch_size=patch_size,
+            patch_overlap=patch_overlap,
+            min_score=min_score,
+            dask_client=dask_client
+        )
 
         # Predict images
         preannotations = model.predict(m, images, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
