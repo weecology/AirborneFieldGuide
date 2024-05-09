@@ -10,7 +10,8 @@
 #SBATCH --output=/home/b.weinstein/logs/FWS_pipeline_%j.out   # Standard output and error log
 #SBATCH --error=/home/b.weinstein/logs/FWS_pipeline_%j.err
 #SBATCH --partition=gpu
-#SBATCH --gpus=8
+#SBATCH --gpus=1
 
 source activate DoubleCounting
-python FWS_pipeline.py
+cd /home/b.weinstein/AirborneFieldGuide/
+python pipeline/FWS_pipeline.py

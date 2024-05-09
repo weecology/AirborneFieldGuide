@@ -2,11 +2,12 @@ name: AirborneFieldGuide
 channels:
   - conda-forge
 dependencies:
-  - python= 3.11
+  - python=3.11
   - pip
   - pip:
     - open_clip_torch
     - DeepForest
     - label_studio
     - comet_ml
-
+    - dask
+    - dask-jobqueue

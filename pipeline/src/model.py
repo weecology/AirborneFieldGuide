@@ -1,7 +1,6 @@
 from logging import warn
 from deepforest import main
 import os
-from httpx import patch
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import CometLogger
 import tempfile
@@ -87,24 +86,29 @@ def get_latest_checkpoint(checkpoint_dir, annotations):
     
     return m
 
-def predict(model, image_paths, patch_size, patch_overlap, min_score, client=None):
+def predict(image_paths, patch_size, patch_overlap, min_score, m=None, model_path=None):
     """Predict bounding boxes for images
     Args:
-        model (main.deepforest): A trained deepforest model.
+        m (main.deepforest): A trained deepforest model.
         image_paths (list): A list of image paths.  
-        client (dask distributed client, optional): A dask distributed client for parallel prediction. Defaults to None.
     Returns:
         list: A list of image predictions.
     """
+    if model_path:
+        m = load(model_path)
+    else:
+        if m is None:
+            raise ValueError("A model or model_path is required for prediction.")
+    
+    # if no trainer, create one
+    if m.trainer is None:
+        m.create_trainer()
+
     predictions = []
     
-    if client is None:
-        for image_path in image_paths:
-            prediction = model.predict_tile(raster_path=image_path, return_plot=False, patch_size=patch_size, patch_overlap=patch_overlap)
-            prediction = prediction[prediction.score > min_score]
-            predictions.append(prediction)
-    else:
-        futures = client.map(model.predict_tile, image_paths, return_plot=False, patch_size=patch_size, patch_overlap=patch_overlap)
-        predictions = client.gather(futures)
-        predictions = [prediction[prediction.score > min_score] for prediction in predictions]
+    for image_path in image_paths:
+        prediction = m.predict_tile(raster_path=image_path, return_plot=False, patch_size=patch_size, patch_overlap=patch_overlap)
+        prediction = prediction[prediction.score > min_score]
+        predictions.append(prediction)
+
     return predictions

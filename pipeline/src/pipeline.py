@@ -2,8 +2,9 @@ import pandas as pd
 from src import data, model, upload, active_learning
 from deepforest import visualize
 import os
+from datetime import datetime
 
-def config_pipeline(config):
+def config_pipeline(config, dask_client=None):
     iterate(
         checkpoint_dir=config["checkpoint_dir"],
         images_to_annotate_dir=config["images_to_annotate_dir"],
@@ -24,7 +25,8 @@ def config_pipeline(config):
         skip_train=config["skip_train"],
         min_score=config["min_score"],
         n_images = config["n_images"],
-        strategy = config["strategy"])
+        strategy = config["strategy"],
+        dask_client=dask_client)
 
 def iterate(
         checkpoint_dir,
@@ -102,7 +104,6 @@ def iterate(
             m = model.get_latest_checkpoint(checkpoint_dir, annotations)
         else:
             evaluation = None
-
         # Train model and save checkpoint
         if not skip_train:
             # Choose new images to annotate
@@ -123,6 +124,11 @@ def iterate(
             evaluation = model.evaluate(m, test_csv=test_csv)
             print(evaluation)
 
+            # Save a checkpoint using timestamp
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            model_checkpoint = os.path.join(checkpoint_dir, f"checkpoint_{timestamp}.ckpt")
+            m.trainer.save_checkpoint(model_checkpoint)
+
         # Move annotated images out of local pool
         if annotations is not None:
             data.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
@@ -137,11 +143,12 @@ def iterate(
             patch_size=patch_size,
             patch_overlap=patch_overlap,
             min_score=min_score,
-            dask_client=dask_client
+            dask_client=dask_client,
+            model_path=model_checkpoint
         )
 
         # Predict images
-        preannotations = model.predict(m, images, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
+        preannotations = model.predict(m=m, image_paths=images, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
         
         # Upload images to annotation platform
         upload.upload_images(sftp_client=sftp_client, images=images, folder_name=folder_name)
