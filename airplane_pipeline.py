@@ -3,7 +3,7 @@ import yaml
 from src import pipeline
 
 # Read config
-config = yaml.safe_load(open("Airplane/drone_config.yml"))
+config = yaml.safe_load(open("airplane_config.yml"))
 
 # Set the Label studio API key as env variable
 with open("/blue/ewhite/everglades/label_studio/label_studio_api_key.txt", "r") as file:

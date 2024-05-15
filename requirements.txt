@@ -4,10 +4,8 @@ pandas
 geopandas
 shapely
 pathlib
-pycolmap
 torchvision
 DeepForest
-git+https://github.com/cvg/Hierarchical-Localization.git
 pytest
 paramiko
 label-studio

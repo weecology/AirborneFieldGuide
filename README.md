@@ -3,10 +3,16 @@
 # Installation
 
 ```
-conda env create -f=environment.yml
+conda create --name AirborneFieldGuide
+conda activate AirborneFieldGuide
+pip install -r requirements.txt
 ```
 
-# Ideas, guiding principles, and wish list
+# What does this repo do?
+
+This repo is a development space for airborne machine learning model development using active learning and label-studio for rapid iteration. Unlabeled data is uploaded to label studio alongside existing model predictions. Human annotators correct and update these 'pre-annotations'. The data is then downloaded nightly to train a new model. 
+
+# Roadmap, Ideas, guiding principles, and wish list
 
 Human review is here to stay. We need rapid model integration to create faster labeling environments specific to airborne biological use-cases. 
 

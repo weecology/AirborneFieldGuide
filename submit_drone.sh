@@ -12,5 +12,5 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 
-source activate DoubleCounting
+source activate AirborneFieldGuide
 python drone_pipeline.py
