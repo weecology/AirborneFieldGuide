@@ -57,6 +57,24 @@ force_run: True
 skip_train: True
 ```
 
+## Pipeline
+
+```
+import os
+import yaml
+from src import pipeline
+
+# Read config
+config = yaml.safe_load(open("<pipeline_name>_config.yml"))
+
+# Set the Label studio API key as env variable
+with open("<path to label studio API key>", "r") as file:
+    api_key = file.read().strip()
+os.environ["LABEL_STUDIO_API_KEY"] = api_key
+
+pipeline.config_pipeline(config=config)
+```
+
 # Roadmap, Ideas, guiding principles, and wish list
 
 Human review is here to stay. We need rapid model integration to create faster labeling environments specific to airborne biological use-cases. 
