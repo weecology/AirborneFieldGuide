@@ -38,19 +38,32 @@ def delete_completed_tasks(label_studio_project):
     for task in tasks:
         label_studio_project.delete_task(task["id"])
 
-def import_image_tasks(label_studio_project,image_names, local_image_dir, predictions=None):
-    # Get project
+def import_image_tasks(label_studio_project, image_names, local_image_dir, predictions=None):
+    """
+    Import image tasks into Label Studio project.
+
+    Args:
+        label_studio_project (LabelStudioProject): The Label Studio project to import tasks into.
+        image_names (list): List of image names to import as tasks.
+        local_image_dir (str): The local directory where the images are stored.
+        predictions (list, optional): List of predictions for each image. Defaults to None.
+
+    Returns:
+        None
+    """
+    import os
+
     tasks = []
     for index, image_name in enumerate(image_names):
-        data_dict = {'image': os.path.join("/data/local-files/?d=input/",os.path.basename(image_name))}
+        data_dict = {'image': os.path.join("/data/local-files/?d=input/", os.path.basename(image_name))}
         if predictions:
             prediction = predictions[index]
-            #Skip predictions if there are none
+            # Skip predictions if there are none
             if prediction.empty:
                 result_dict = []
             else:
                 result_dict = [data.label_studio_bbox_format(local_image_dir, prediction)]
-            upload_dict = {"data":data_dict, "predictions":result_dict}
+            upload_dict = {"data": data_dict, "predictions": result_dict}
         tasks.append(upload_dict)
     label_studio_project.import_tasks(tasks)
 
@@ -94,6 +107,21 @@ def download_completed_tasks(label_studio_project, train_csv_folder):
     return annotations
 
 def upload_images(sftp_client, images, folder_name):
+    """
+    Uploads a list of images to a remote server using SFTP.
+
+    Args:
+        sftp_client (SFTPClient): An instance of the SFTPClient class representing the SFTP connection.
+        images (list): A list of image file paths to be uploaded.
+        folder_name (str): The name of the folder on the remote server where the images will be uploaded.
+
+    Returns:
+        None
+
+    Raises:
+        Any exceptions that may occur during the file transfer.
+
+    """
     # SCP file transfer
     for image in images:
         sftp_client.put(image, os.path.join(folder_name,"input",os.path.basename(image)))

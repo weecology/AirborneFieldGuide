@@ -2,14 +2,14 @@ import os
 import glob
 import shutil
 import pandas as pd
-import PIL
+from PIL import Image
 
 def label_studio_bbox_format(local_image_dir, preannotations):
     """Create a JSON string for a single image the Label Studio API.
     """
     predictions = []
-    original_width = PIL.Image.open(os.path.join(local_image_dir,os.path.basename(preannotations.image_path.unique()[0]))).size[0]
-    original_height = PIL.Image.open(os.path.join(local_image_dir,os.path.basename(preannotations.image_path.unique()[0]))).size[1]
+    original_width = Image.open(os.path.join(local_image_dir,os.path.basename(preannotations.image_path.unique()[0]))).size[0]
+    original_height = Image.open(os.path.join(local_image_dir,os.path.basename(preannotations.image_path.unique()[0]))).size[1]
 
     for index, row in preannotations.iterrows():
         result = {

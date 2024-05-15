@@ -27,7 +27,7 @@ n_images: 10
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "Airplane Photos"
+label-studio-project: "Everglades Airplane Model"
 
 # Debugging
 force_run: True

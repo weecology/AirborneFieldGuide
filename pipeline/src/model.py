@@ -32,7 +32,14 @@ def load(path):
         main.deepforest: A trained deepforest model.
     """
     # Check classes
-    snapshot = main.deepforest.load_from_checkpoint(path)
+    if path == "tree":
+        snapshot = main.deepforest()
+        snapshot.use_release()
+    elif path == "bird":
+        snapshot = main.deepforest()
+        snapshot.use_bird_release()
+    else:   
+        snapshot = main.deepforest.load_from_checkpoint(path)
 
     return snapshot
 

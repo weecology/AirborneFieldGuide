@@ -52,7 +52,7 @@ def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_o
                 dask_results.append(pd.concat(block_result))
             preannotations = pd.concat(dask_results)
         else:
-            preannotations = model.predict(m, pool, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
+            preannotations = model.predict(m=m, image_paths=pool, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
             preannotations = pd.concat(preannotations)
         
         # Sort images by total number of predictions
