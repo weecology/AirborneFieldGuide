@@ -12,6 +12,51 @@ pip install -r requirements.txt
 
 This repo is a development space for airborne machine learning model development using active learning and label-studio for rapid iteration. Unlabeled data is uploaded to label studio alongside existing model predictions. Human annotators correct and update these 'pre-annotations'. The data is then downloaded nightly to train a new model. 
 
+## Contents
+
+The pipeline contains two parts
+
+* A config .yml file that specifies task specific details such as label-studio project and active learning strategy
+* A <name>_pipeline.py file that loads the config and runs the iteration. There is also an optional submit_<name>.sh script for deploying on SLURM clusters.
+
+### Config
+
+A general example of the yaml
+```
+# Remote server for image hosting
+user: 'ben'
+server_url: 'serenity.ifas.ufl.edu'
+key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
+folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
+
+# Model Training
+# Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
+model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20230426_082517/species_model.pl'
+test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized_no_nan.csv'
+images_to_annotate_dir: '/blue/ewhite/everglades/label_studio/airplane/images_to_annotate'
+checkpoint_dir: '/blue/ewhite/everglades/Zooniverse/'
+train_csv_folder: /blue/ewhite/everglades/label_studio/airplane/annotated_images/csvs
+
+# Active learning
+annotated_images_dir: '/blue/ewhite/everglades/label_studio/airplane/annotated_images'
+#annotation_csv: /blue/ewhite/everglades/label_studio/airplane/annotated_images/train_20231214_093907.csv
+annotation_csv:
+patch_size: 1500
+patch_overlap: 0.05
+min_score: 0.3
+strategy: 'random'
+# Number of images to select for annotation
+n_images: 10
+
+# Label studio
+label-studio-url: "https://labelstudio.naturecast.org/"
+label-studio-project: "Everglades Airplane Model"
+
+# Debugging
+force_run: True
+skip_train: True
+```
+
 # Roadmap, Ideas, guiding principles, and wish list
 
 Human review is here to stay. We need rapid model integration to create faster labeling environments specific to airborne biological use-cases. 
