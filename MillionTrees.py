@@ -11,5 +11,6 @@ with open("/blue/ewhite/everglades/label_studio/label_studio_api_key.txt", "r") 
     api_key = file.read().strip()
 os.environ["LABEL_STUDIO_API_KEY"] = api_key
 
-client = start(gpus=5, mem_size="20GB")
-pipeline.config_pipeline(config=config, dask_client=client)
+#client = start(gpus=5, mem_size="20GB")
+#pipeline.config_pipeline(config=config, dask_client=client)
+pipeline.config_pipeline(config=config)

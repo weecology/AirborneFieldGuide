@@ -4,7 +4,7 @@ import yaml
 import pandas as pd
 
 # read config
-config = yaml.safe_load(open("Airplane/airplane_config.yml"))
+config = yaml.safe_load(open("airplane_config.yml"))
 
 # Get weights from latest drone model
 # Train data

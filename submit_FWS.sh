@@ -12,6 +12,6 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 
-source activate DoubleCounting
+source activate AirborneFieldGuide
 cd /home/b.weinstein/AirborneFieldGuide/
-python pipeline/FWS_pipeline.py
+python FWS_pipeline.py

@@ -16,6 +16,8 @@ def evaluate(model, test_csv):
     Returns:
         dict: A dictionary of evaluation metrics.
     """
+    # create trainer
+    model.create_trainer()
     model.config["validation"]["csv_file"] = test_csv
     model.config["validation"]["root_dir"] = os.path.dirname(test_csv)
     results = model.trainer.validate(model)
@@ -47,30 +49,39 @@ def extract_backbone(path, annotations):
     snapshot = main.deepforest.load_from_checkpoint(path)
     warnings.warn("The number of classes in the model does not match the number of classes in the annotations. The backbone will be extracted and retrained.")
     label_dict = {value: index for index, value in enumerate(annotations.label.unique())}
-    m = main.deepforest(num_classes=len(annotations.label.unique()), label_dict=label_dict, config_file="Airplane/deepforest_config.yml")
+    m = main.deepforest(num_classes=len(annotations.label.unique()), label_dict=label_dict, config_file="deepforest_config.yml")
     m.model.backbone.load_state_dict(snapshot.model.backbone.state_dict())
     m.model.head.regression_head.load_state_dict(snapshot.model.head.regression_head.state_dict())
 
     return m
 
-def train(model, annotations, test_csv, train_image_dir, checkpoint_dir):
+def train(model, annotations, train_image_dir, checkpoint_dir, comet_project=None, comet_workspace=None):
     """Train a model on labeled images.
     Args:
         image_paths (list): A list of image paths.
+        annotations (pd.DataFrame): A DataFrame containing annotations.
+        train_image_dir (str): The directory containing the training images.
+        checkpoint_dir (str): The directory to save model checkpoints.
+        comet_project (str): The comet project name for logging. Defaults to None.
     
     Returns:
         main.deepforest: A trained deepforest model.
     """
     tmpdir = tempfile.gettempdir()
-    comet_logger = CometLogger(project_name="everglades-species", workspace="bw4sz")
-    comet_logger.experiment.log_table("train.csv", annotations)
 
     annotations.to_csv(os.path.join(tmpdir,"train.csv"), index=False)
     model.config["train"]["csv_file"] = os.path.join(tmpdir,"train.csv")
     model.config["train"]["root_dir"] = train_image_dir
     
-    checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_dir)
-    model.create_trainer(callbacks=[checkpoint_callback])
+    if comet_project:
+        comet_logger = CometLogger(project_name=comet_project, workspace=comet_workspace)
+        comet_logger.experiment.log_parameters(model.config)
+        comet_logger.experiment.log_table("train.csv", annotations)
+        #checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_dir)
+        model.create_trainer(logger=comet_logger)
+    else:
+        model.create_trainer()
+    
     model.trainer.fit(model)
 
     return model

@@ -1,5 +1,5 @@
 import pandas as pd
-from src import data, model, upload, active_learning
+from src import model, upload, active_learning
 from deepforest import visualize
 import os
 from datetime import datetime
@@ -26,6 +26,9 @@ def config_pipeline(config, dask_client=None):
         min_score=config["min_score"],
         n_images = config["n_images"],
         strategy = config["strategy"],
+        labels = config["labels"],
+        comet_workspace=config["comet_workspace"],
+        comet_project=config["comet_project"],
         dask_client=dask_client)
 
 def iterate(
@@ -49,7 +52,10 @@ def iterate(
         annotation_csv=None,
         force_run=False,
         skip_train=False,
-        dask_client=None):
+        dask_client=None,
+        comet_workspace=None,
+        comet_project=None,
+        labels=None):
     """A Deepforest pipeline for rapid annotation and model iteration.
 
     Args:
@@ -75,6 +81,9 @@ def iterate(
             - "most-detections": Choose images with the most detections based on predictions.
         n_images: The number of images to choose.
         dask_client: A dask distributed client for parallel prediction. Defaults to None.
+        labels: A list of labels to filter by. Defaults to None.
+        comet_workspace: The comet workspace for logging. Defaults to None.
+        comet_project: The comet project name for logging. Defaults to None.
     Returns:
         None
     """
@@ -112,13 +121,19 @@ def iterate(
             before_evaluation = model.evaluate(m, test_csv=test_csv)
             print(before_evaluation)
 
-            train_df = data.gather_data(annotated_images_dir)
+            train_df = upload.gather_data(train_csv_folder, labels=labels)
 
             # View test images overlaps, just a couple debugs
             visualize.plot_prediction_dataframe(df=pd.read_csv(test_csv).head(100), root_dir=os.path.dirname(test_csv), savedir="/blue/ewhite/everglades/label_studio/test_plots")
             visualize.plot_prediction_dataframe(df=train_df.head(100), root_dir=annotated_images_dir, savedir="/blue/ewhite/everglades/label_studio/test_plots")
-
-            m = model.train(model=m, annotations=train_df, test_csv=test_csv, checkpoint_dir=checkpoint_dir, train_image_dir=annotated_images_dir)
+            m = model.train(
+                model=m,
+                annotations=train_df,
+                checkpoint_dir=checkpoint_dir,
+                train_image_dir=annotated_images_dir,
+                comet_project=comet_project,
+                comet_workspace=comet_workspace
+         )
 
             # Choose new images to annotate
             evaluation = model.evaluate(m, test_csv=test_csv)
@@ -131,7 +146,7 @@ def iterate(
 
         # Move annotated images out of local pool
         if annotations is not None:
-            data.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
+            upload.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
 
         # Choose local images to annotate
         images = active_learning.choose_images(

@@ -11,3 +11,6 @@ paramiko
 label-studio
 Pillow
 label_studio_sdk
+comet-ml
+dask
+dask-jobqueue

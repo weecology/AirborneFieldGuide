@@ -8,15 +8,25 @@ folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 
 # Model Training
 # Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
-model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20230426_082517/species_model.pl'
-test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized_no_nan.csv'
+model_checkpoint: '/blue/ewhite/everglades/Zooniverse/20230426_082517/species_model.pl'
+test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/species_test_20230426_082517.csv'
 images_to_annotate_dir: '/blue/ewhite/everglades/label_studio/drone/images_to_annotate'
 checkpoint_dir: '/blue/ewhite/everglades/Zooniverse/'
 train_csv_folder: /blue/ewhite/everglades/label_studio/drone/annotated_images/csvs
+# List of labels to use from annotations in case of extra labels
+labels:
+  - 'Great Egret'
+  - 'Roseate Spoonbill'
+  - 'White Ibis'
+  - 'Great Blue Heron'
+  - 'Wood Stork'
+  - 'Snowy Egret'
+  - 'Anhinga'
+comet_workspace: "bw4sz"
+comet_project: "everglades-species"
 
 # Active learning
 annotated_images_dir: '/blue/ewhite/everglades/label_studio/drone/annotated_images'
-#annotation_csv: /blue/ewhite/everglades/label_studio/drone/annotated_images/train_20231214_093907.csv
 annotation_csv:
 patch_size: 1500
 patch_overlap: 0.05
@@ -27,8 +37,8 @@ n_images: 10
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "everglades-annotation"
+label-studio-project: "Everglades Drone model"
 
 # Debugging
 force_run: True
-skip_train: True
+skip_train: False

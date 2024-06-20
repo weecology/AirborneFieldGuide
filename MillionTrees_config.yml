@@ -13,16 +13,19 @@ test_csv: '/orange/idtrees-collab/NeonTreeEvaluation/'
 images_to_annotate_dir: '/blue/ewhite/b.weinstein/MillionTrees/images_to_annotate'
 checkpoint_dir: '/blue/ewhite/b.weinstein/MillionTrees/checkpoints'
 train_csv_folder: /blue/ewhite/b.weinstein/MillionTrees/
-
+labels:
+  - 'Tree'
+comet_workspace: "bw4sz"
+comet_project: "million-trees"
 # Active learning
 annotated_images_dir: '/blue/ewhite/b.weinstein/MillionTrees/annotated_images'
 annotation_csv:
-patch_size: 3000
-patch_overlap: 0.05
-min_score: 0.3
-strategy: 'most-detections'
+patch_size: 1600
+patch_overlap: 0.1
+min_score: 0.1
+strategy: 'random'
 # Number of images to select for annotation
-n_images: 10
+n_images: 3
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"

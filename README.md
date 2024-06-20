@@ -3,7 +3,7 @@
 # Installation
 
 ```
-conda create --name AirborneFieldGuide
+conda create --name AirborneFieldGuide python=3.10
 conda activate AirborneFieldGuide
 pip install -r requirements.txt
 ```
@@ -57,7 +57,7 @@ force_run: True
 skip_train: True
 ```
 
-## Pipeline
+### Pipeline
 
 ```
 import os
