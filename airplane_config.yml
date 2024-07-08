@@ -13,6 +13,8 @@ test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized_no_nan.c
 images_to_annotate_dir: '/blue/ewhite/everglades/label_studio/airplane/images_to_annotate'
 checkpoint_dir: '/blue/ewhite/everglades/Zooniverse/'
 train_csv_folder: /blue/ewhite/everglades/label_studio/airplane/annotated_images/csvs
+comet_workspace: "bw4sz"
+comet_project: "everglades-airplane"
 
 # Active learning
 annotated_images_dir: '/blue/ewhite/everglades/label_studio/airplane/annotated_images'
@@ -23,12 +25,20 @@ patch_overlap: 0.05
 min_score: 0.3
 strategy: 'random'
 # Number of images to select for annotation
-n_images: 10
+n_images: 1
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
 label-studio-project: "Everglades Airplane Model"
+labels:
+  - 'Great Egret'
+  - 'Roseate Spoonbill'
+  - 'White Ibis'
+  - 'Great Blue Heron'
+  - 'Wood Stork'
+  - 'Snowy Egret'
+  - 'Anhinga'
 
 # Debugging
-force_run: True
+force_run: False
 skip_train: True

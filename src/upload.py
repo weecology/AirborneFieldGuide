@@ -73,9 +73,9 @@ def convert_json_to_dataframe(x, image_path):
 
         # Append to list
         results.append(result)
-        df = pd.DataFrame(results)
+    df = pd.DataFrame(results)
         
-        return df
+    return df
         
 
 # Move images from images_to_annotation to images_annotated 
@@ -220,6 +220,30 @@ def download_completed_tasks(label_studio_project, train_csv_folder):
     annotations.to_csv(train_path, index=False)
 
     return annotations
+
+def download_images(sftp_client, image_names, local_image_dir, folder_name):
+    """
+    Download images from a remote server using SFTP.
+
+    Args:
+        sftp_client (SFTPClient): An instance of the SFTPClient class representing the SFTP connection.
+        image_names (list): A list of image file names to be downloaded.
+        local_image_dir (str): The local directory where the images will be saved.
+        folder_name (str): The name of the folder on the remote server where the images are located.
+
+    Returns:
+        None
+
+    Raises:
+        Any exceptions that may occur during the file transfer.
+
+    """
+    # SCP file transfer
+    for image_name in image_names:
+        remote_path = os.path.join(folder_name, "input", image_name)
+        local_path = os.path.join(local_image_dir, image_name)
+        sftp_client.get(remote_path, local_path)
+        print(f"Downloaded {image_name} successfully")
 
 def upload_images(sftp_client, images, folder_name):
     """

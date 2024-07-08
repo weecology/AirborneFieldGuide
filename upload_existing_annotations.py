@@ -12,8 +12,8 @@ with open("/blue/ewhite/everglades/label_studio/label_studio_api_key.txt", "r") 
     api_key = file.read().strip()
 os.environ["LABEL_STUDIO_API_KEY"] = api_key
 
-config = yaml.safe_load(open("pipeline/airplane_config.yml"))
-csv_file = "/blue/ewhite/everglades/Airplane/annotations/converted_photoshop/tiles/split_annotations.csv"
+config = yaml.safe_load(open("MillionTrees_config.yml"))
+csv_file = "/orange/ewhite/DeepForest/ReForestTree/images/train.csv"
 sftp_client = upload.create_client(user=config["user"], host=config["server_url"], key_filename=config["key_filename"])
 label_studio_project = upload.connect_to_label_studio(url=config["label-studio-url"], project_name=config["label-studio-project"])
 

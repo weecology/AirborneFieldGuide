@@ -3,6 +3,7 @@ from src import model, upload, active_learning
 from deepforest import visualize
 import os
 from datetime import datetime
+import json
 
 def config_pipeline(config, dask_client=None):
     iterate(
@@ -91,12 +92,12 @@ def iterate(
     # Download labeled annotations
     sftp_client = upload.create_client(user=user, host=host, key_filename=key_filename)
     label_studio_project = upload.connect_to_label_studio(url=label_studio_url, project_name=label_studio_project_name)
+    annotations = upload.download_completed_tasks(label_studio_project=label_studio_project, train_csv_folder=train_csv_folder)
 
     if force_run:
         annotations = None
         complete = True
     elif annotation_csv is None:
-        annotations = upload.download_completed_tasks(label_studio_project=label_studio_project, train_csv_folder=train_csv_folder)
         if annotations is None:
             print("No new annotations")
             complete = False
@@ -114,14 +115,22 @@ def iterate(
         else:
             evaluation = None
         # Train model and save checkpoint
+        jsons = label_studio_project.export_tasks()
+        # For each json, save and name based on id key
+        for record in jsons:
+            id = record["id"]
+            with open("{}/label_studio/label_studio_export_{}.json".format(train_csv_folder, id), "w") as file:
+                # dump dict as json
+                json_str = json.dumps(record)
+                file.write(json_str)
+
         if not skip_train:
             # Choose new images to annotate
+            train_df = upload.gather_data(train_csv_folder, labels=labels)
             m.config["validation"]["csv_file"] = test_csv
             m.config["validation"]["root_dir"] = os.path.dirname(test_csv) 
             before_evaluation = model.evaluate(m, test_csv=test_csv)
             print(before_evaluation)
-
-            train_df = upload.gather_data(train_csv_folder, labels=labels)
 
             # View test images overlaps, just a couple debugs
             visualize.plot_prediction_dataframe(df=pd.read_csv(test_csv).head(100), root_dir=os.path.dirname(test_csv), savedir="/blue/ewhite/everglades/label_studio/test_plots")
@@ -147,7 +156,11 @@ def iterate(
         # Move annotated images out of local pool
         if annotations is not None:
             upload.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
-
+            # Get any images from the server that are not in the images_to_annotate_dir
+            for image in annotations["image_path"].unique():
+                if not os.path.exists(os.path.join(images_to_annotate_dir, image)):
+                    upload.download_images(sftp_client=sftp_client, image_names=[image], folder_name=folder_name, local_image_dir=annotated_images_dir)
+            
         # Choose local images to annotate
         images = active_learning.choose_images(
             image_dir=images_to_annotate_dir,
@@ -170,4 +183,5 @@ def iterate(
         upload.import_image_tasks(label_studio_project=label_studio_project, image_names=images, local_image_dir=images_to_annotate_dir, predictions=preannotations)
 
         # Delete completed tasks
-        upload.delete_completed_tasks(label_studio_project=label_studio_project)
+        #if not force_run:
+            #upload.delete_completed_tasks(label_studio_project=label_studio_project)
