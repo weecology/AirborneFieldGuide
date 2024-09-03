@@ -23,9 +23,9 @@ annotation_csv:
 patch_size: 1500
 patch_overlap: 0.05
 min_score: 0.3
-strategy: 'random'
+strategy: 'most-detections'
 # Number of images to select for annotation
-n_images: 1
+n_images: 10
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"

@@ -6,11 +6,14 @@ server_url: 'serenity.ifas.ufl.edu'
 key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
 folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 
+comet_workspace: "bw4sz"
+comet_project: "everglades-airplane"
+
 # Model Training
 # Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
 model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20230426_082517/species_model.pl'
-test_csv: '/blue/ewhite/everglades/Zooniverse/cleaned_test/test_resized_no_nan.csv'
-images_to_annotate_dir: '/blue/ewhite/everglades/FWSImagery2024/JPG_20240417_UFL'
+test_csv:
+images_to_annotate_dir: '/blue/ewhite/everglades/FWSImaging2024/JPG_20240417_UFL'
 checkpoint_dir: '/blue/ewhite/everglades/label_studio/FWS/checkpoints'
 train_csv_folder: /blue/ewhite/everglades/label_studio/FWS/annotated_images/csvs
 
@@ -20,14 +23,27 @@ annotation_csv:
 patch_size: 1500
 patch_overlap: 0.05
 min_score: 0.3
-strategy: 'most-detections'
+strategy: 'target-labels'
 # Number of images to select for annotation
-n_images: 20
+n_images: 30
+# Labels to include in the active learning
+target_labels:
+  - "Wood Stork"
 
+# Filter labels, use 'None' to include all labels, use blank to have background class with no labels in images
+labels:
+  - "Great Egret"
+  - "Roseate Spoonbill"
+  - "White Ibis"
+  - "Great Blue Heron"
+  - "Wood Stork"
+  - "Snowy Egret"
+  - "Anhinga"
+  - 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
 label-studio-project: "Fish and Wildlife Everglades Flight"
 
 # Debugging
-force_run: True
-skip_train: True
+force_run: False
+skip_train: False

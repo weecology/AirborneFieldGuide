@@ -4,6 +4,8 @@ from deepforest import visualize
 import os
 from datetime import datetime
 import json
+import random
+import tempfile
 
 def config_pipeline(config, dask_client=None):
     iterate(
@@ -28,6 +30,7 @@ def config_pipeline(config, dask_client=None):
         n_images = config["n_images"],
         strategy = config["strategy"],
         labels = config["labels"],
+        target_labels = config["target_labels"],
         comet_workspace=config["comet_workspace"],
         comet_project=config["comet_project"],
         dask_client=dask_client)
@@ -54,6 +57,7 @@ def iterate(
         force_run=False,
         skip_train=False,
         dask_client=None,
+        target_labels=None,
         comet_workspace=None,
         comet_project=None,
         labels=None):
@@ -74,12 +78,14 @@ def iterate(
         label_studio_url: The URL of the Label Studio server.
         label_studio_project_name: The name of the Label Studio project.
         train_csv_folder: The path to a directory of CSV files containing annotations.
+        target_labels: A list of target labels to filter images by. Defaults to None.
         min_score: The minimum score for a prediction to be included in the annotation platform.
         force_run: If True, will run the pipeline even if there are no new annotations. Defaults to False.
         skip_train: If True, will skip training the model. Defaults to False.
         strategy: The strategy for choosing images. Available strategies are:
             - "random": Choose images randomly from the pool.
             - "most-detections": Choose images with the most detections based on predictions.
+            - "target-labels": Choose images with specified labels.
         n_images: The number of images to choose.
         dask_client: A dask distributed client for parallel prediction. Defaults to None.
         labels: A list of labels to filter by. Defaults to None.
@@ -124,43 +130,72 @@ def iterate(
                 json_str = json.dumps(record)
                 file.write(json_str)
 
-        if not skip_train:
-            # Choose new images to annotate
-            train_df = upload.gather_data(train_csv_folder, labels=labels)
-            m.config["validation"]["csv_file"] = test_csv
-            m.config["validation"]["root_dir"] = os.path.dirname(test_csv) 
-            before_evaluation = model.evaluate(m, test_csv=test_csv)
-            print(before_evaluation)
-
-            # View test images overlaps, just a couple debugs
-            visualize.plot_prediction_dataframe(df=pd.read_csv(test_csv).head(100), root_dir=os.path.dirname(test_csv), savedir="/blue/ewhite/everglades/label_studio/test_plots")
-            visualize.plot_prediction_dataframe(df=train_df.head(100), root_dir=annotated_images_dir, savedir="/blue/ewhite/everglades/label_studio/test_plots")
-            m = model.train(
-                model=m,
-                annotations=train_df,
-                checkpoint_dir=checkpoint_dir,
-                train_image_dir=annotated_images_dir,
-                comet_project=comet_project,
-                comet_workspace=comet_workspace
-         )
-
-            # Choose new images to annotate
-            evaluation = model.evaluate(m, test_csv=test_csv)
-            print(evaluation)
-
-            # Save a checkpoint using timestamp
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            model_checkpoint = os.path.join(checkpoint_dir, f"checkpoint_{timestamp}.ckpt")
-            m.trainer.save_checkpoint(model_checkpoint)
-
         # Move annotated images out of local pool
         if annotations is not None:
             upload.move_images(src_dir=images_to_annotate_dir, dst_dir=annotated_images_dir, annotations=annotations)
             # Get any images from the server that are not in the images_to_annotate_dir
             for image in annotations["image_path"].unique():
-                if not os.path.exists(os.path.join(images_to_annotate_dir, image)):
+                if not os.path.exists(os.path.join(annotated_images_dir, image)):
                     upload.download_images(sftp_client=sftp_client, image_names=[image], folder_name=folder_name, local_image_dir=annotated_images_dir)
             
+        if not skip_train:
+            # Choose new images to annotate
+            label_studio_annotations = upload.gather_data(train_csv_folder, labels=labels)
+
+            # HOT FIX, if label is nan, set as first label, it will be ignored in training and set to 0.
+            label_studio_annotations["label"] = label_studio_annotations["label"].fillna(label_studio_annotations["label"].unique()[0])
+            # Fill in missing values with 0 in xmin, xmax, ymin, ymax
+            label_studio_annotations[["xmin", "xmax", "ymin", "ymax"]] = label_studio_annotations[["xmin", "xmax", "ymin", "ymax"]].fillna(0)
+
+            if not test_csv:
+                tmpdir = tempfile.gettempdir()
+                # split train images into 90% train and 10% validation
+                images = list(label_studio_annotations["image_path"].unique())
+                train_images = random.sample(images, int(len(images)*0.9))
+                train_df = label_studio_annotations[label_studio_annotations["image_path"].isin(train_images)]
+                # Save validation csv
+                test_csv = os.path.join(tmpdir, "random_validation.csv")
+                validation_df = label_studio_annotations[~label_studio_annotations["image_path"].isin(train_images)]
+                validation_df.to_csv(test_csv, index=False)
+            else:
+                train_df = label_studio_annotations
+            
+            # Chunk images
+            crop_dir = os.path.join(images_to_annotate_dir,"crops")
+            crop_annotations_train = model.preprocess_images(train_df, save_dir=crop_dir, root_dir=annotated_images_dir, patch_size=patch_size, patch_overlap=patch_overlap)
+            crop_annotations_train.to_csv(os.path.join(tmpdir,"train.csv"), index=False)
+
+            crop_annotations_test = model.preprocess_images(validation_df,  save_dir=crop_dir, root_dir=annotated_images_dir, patch_size=patch_size, patch_overlap=patch_overlap)
+            crop_annotations_test.to_csv(os.path.join(tmpdir,"test.csv"), index=False)
+            test_csv = os.path.join(tmpdir,"test.csv")
+
+            m.config["validation"]["csv_file"] = test_csv
+            m.config["validation"]["root_dir"] = crop_dir
+            before_evaluation = model.evaluate(m, test_csv=test_csv, image_root_dir=crop_dir)
+            print(before_evaluation)
+
+            # View test images overlaps, just a couple debugs
+            m = model.train(
+                model=m,
+                annotations=crop_annotations_train,
+                checkpoint_dir=checkpoint_dir,
+                train_image_dir=crop_dir,
+                comet_project=comet_project,
+                comet_workspace=comet_workspace
+         )
+
+            # Choose new images to annotate
+            if test_csv:
+                evaluation = model.evaluate(m, test_csv=test_csv, image_root_dir=crop_dir)
+                print(evaluation)
+
+            # Save a checkpoint using timestamp
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            model_checkpoint = os.path.join(checkpoint_dir, f"checkpoint_{timestamp}.ckpt")
+            m.trainer.save_checkpoint(model_checkpoint)
+        else:
+            model_checkpoint = None
+
         # Choose local images to annotate
         images = active_learning.choose_images(
             image_dir=images_to_annotate_dir,
@@ -172,16 +207,28 @@ def iterate(
             patch_overlap=patch_overlap,
             min_score=min_score,
             dask_client=dask_client,
-            model_path=model_checkpoint
+            model_path=model_checkpoint,
+            target_labels=target_labels
         )
 
+        if len(images) == 0:
+            raise ValueError("No new images selected to annotate")
+        
         # Predict images
-        preannotations = model.predict(m=m, image_paths=images, patch_size=patch_size, patch_overlap=patch_overlap, min_score=min_score)
+        preannotations = model.predict(
+            m=m,
+            model_path=model_checkpoint,
+            image_paths=images,
+            patch_size=patch_size,
+            patch_overlap=patch_overlap,
+            min_score=min_score,
+            dask_client=dask_client
+        )
         
         # Upload images to annotation platform
         upload.upload_images(sftp_client=sftp_client, images=images, folder_name=folder_name)
         upload.import_image_tasks(label_studio_project=label_studio_project, image_names=images, local_image_dir=images_to_annotate_dir, predictions=preannotations)
 
         # Delete completed tasks
-        #if not force_run:
-            #upload.delete_completed_tasks(label_studio_project=label_studio_project)
+        if not force_run:
+            upload.delete_completed_tasks(label_studio_project=label_studio_project)

@@ -10,13 +10,14 @@ folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 # Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
 model_checkpoint: 'tree'
 test_csv: '/orange/idtrees-collab/NeonTreeEvaluation/'
-images_to_annotate_dir: '/blue/ewhite/b.weinstein/MillionTrees/images_to_annotate'
+images_to_annotate_dir: '/blue/ewhite/b.weinstein/MillionTrees/images_to_annotate/Restor'
 checkpoint_dir: '/blue/ewhite/b.weinstein/MillionTrees/checkpoints'
 train_csv_folder: /blue/ewhite/b.weinstein/MillionTrees/annotated_images/csv
 labels:
   - 'Tree'
 comet_workspace: "bw4sz"
 comet_project: "million-trees"
+
 # Active learning
 annotated_images_dir: '/blue/ewhite/b.weinstein/MillionTrees/annotated_images'
 annotation_csv:
@@ -30,11 +31,11 @@ target_labels:
   - "Tree"
 
 # Number of images to select for annotation
-n_images: 2
+n_images: 50
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "MillionTrees"
+label-studio-project: "Restor"
 
 # Debugging
 force_run: False

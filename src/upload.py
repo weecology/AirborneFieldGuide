@@ -51,7 +51,7 @@ def check_if_complete(annotations):
 # con for a json that looks like 
 #{'id': 539, 'created_username': ' vonsteiny@gmail.com, 10', 'created_ago': '0\xa0minutes', 'task': {'id': 1962, 'data': {...}, 'meta': {}, 'created_at': '2023-01-18T20:58:48.250374Z', 'updated_at': '2023-01-18T20:58:48.250387Z', 'is_labeled': True, 'overlap': 1, 'inner_id': 381, 'total_annotations': 1, ...}, 'completed_by': {'id': 10, 'first_name': '', 'last_name': '', 'email': 'vonsteiny@gmail.com'}, 'result': [], 'was_cancelled': False, 'ground_truth': False, 'created_at': '2023-01-30T21:43:35.447447Z', 'updated_at': '2023-01-30T21:43:35.447460Z', 'lead_time': 29.346, 'parent_prediction': None, 'parent_annotation': None}
     
-def convert_json_to_dataframe(x, image_path):
+def convert_json_to_dataframe(x):
     # Loop through annotations and convert to pandas {'original_width': 6016, 'original_height': 4008, 'image_rotation': 0, 'value': {'x': 94.96474718276704, 'y': 22.132321974413898, 'width': 1.7739074476466308, 'height': 2.2484415320942235, 'rotation': 0, 'rectanglelabels': [...]}, 'id': 'UeovfQERjL', 'from_name': 'label', 'to_name': 'image', 'type': 'rectanglelabels', 'origin': 'manual'}
     results = []
     for annotation in x:
@@ -63,7 +63,6 @@ def convert_json_to_dataframe(x, image_path):
 
         # Create dictionary
         result = {
-            "image_path": image_path,
             "xmin": xmin,
             "ymin": ymin,
             "xmax": xmax,
@@ -112,8 +111,11 @@ def gather_data(train_dir, labels=None):
         df.append(pd.read_csv(x))
     df = pd.concat(df)
     df.drop_duplicates(inplace=True)
+    df.reset_index(drop=True, inplace=True)
 
     # Filter labels
+    if labels[0] == 'None':
+        labels = None
     if labels:
         df = df[df["label"].isin(labels)]
     
@@ -179,6 +181,8 @@ def import_image_tasks(label_studio_project, image_names, local_image_dir, predi
             else:
                 result_dict = [label_studio_bbox_format(local_image_dir, prediction)]
             upload_dict = {"data": data_dict, "predictions": result_dict}
+        else:
+            upload_dict = {"data": data_dict}
         tasks.append(upload_dict)
     label_studio_project.import_tasks(tasks)
 
@@ -205,7 +209,9 @@ def download_completed_tasks(label_studio_project, train_csv_folder):
                 }
             result = pd.DataFrame(result, index=[0])
         else:
-            result = convert_json_to_dataframe(label_json, image_path)
+            result = convert_json_to_dataframe(label_json)
+            image_path = os.path.basename(labeled_task['data']['image'])
+            result["image_path"] = image_path
             result["annotator"] = labeled_task["annotations"][0]["created_username"]
         labels.append(result)
 
@@ -242,7 +248,11 @@ def download_images(sftp_client, image_names, local_image_dir, folder_name):
     for image_name in image_names:
         remote_path = os.path.join(folder_name, "input", image_name)
         local_path = os.path.join(local_image_dir, image_name)
-        sftp_client.get(remote_path, local_path)
+        try:
+            sftp_client.get(remote_path, local_path)
+        except FileNotFoundError:
+            continue
+        
         print(f"Downloaded {image_name} successfully")
 
 def upload_images(sftp_client, images, folder_name):
