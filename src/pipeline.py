@@ -1,6 +1,6 @@
 import pandas as pd
 from src import model, upload, active_learning
-from deepforest import visualize
+from deepforest.utilities import read_file
 import os
 from datetime import datetime
 import json
@@ -156,6 +156,7 @@ def iterate(
                 # Save validation csv
                 test_csv = os.path.join(tmpdir, "random_validation.csv")
                 validation_df = label_studio_annotations[~label_studio_annotations["image_path"].isin(train_images)]
+                validation_df.fillna(0, inplace=True)
                 validation_df.to_csv(test_csv, index=False)
             else:
                 train_df = label_studio_annotations
@@ -174,7 +175,6 @@ def iterate(
             before_evaluation = model.evaluate(m, test_csv=test_csv, image_root_dir=crop_dir)
             print(before_evaluation)
 
-            # View test images overlaps, just a couple debugs
             m = model.train(
                 model=m,
                 annotations=crop_annotations_train,
@@ -214,17 +214,20 @@ def iterate(
         if len(images) == 0:
             raise ValueError("No new images selected to annotate")
         
-        # Predict images
-        preannotations = model.predict(
-            m=m,
-            model_path=model_checkpoint,
-            image_paths=images,
-            patch_size=patch_size,
-            patch_overlap=patch_overlap,
-            min_score=min_score,
-            dask_client=dask_client
-        )
-        
+        # Predict images if annotations don't already exist
+        if os.path.exists(annotated_images_dir + "/annotations.csv"):
+            preannotations = read_file(pd.read_csv(annotated_images_dir + "/annotations.csv"), root_dir=annotated_images_dir)
+        else:
+            preannotations = model.predict(
+                m=m,
+                model_path=model_checkpoint,
+                image_paths=images,
+                patch_size=patch_size,
+                patch_overlap=patch_overlap,
+                min_score=min_score,
+                dask_client=dask_client
+            )
+            
         # Upload images to annotation platform
         upload.upload_images(sftp_client=sftp_client, images=images, folder_name=folder_name)
         upload.import_image_tasks(label_studio_project=label_studio_project, image_names=images, local_image_dir=images_to_annotate_dir, predictions=preannotations)

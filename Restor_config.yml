@@ -35,8 +35,8 @@ n_images: 50
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "Restor"
+label-studio-project: "MillionTrees"
 
 # Debugging
-force_run: False
+force_run: True
 skip_train: True

@@ -80,6 +80,7 @@ def preprocess_images(annotations, root_dir, save_dir, limit_empty_frac=0.5, pat
             patch_size=patch_size,
             patch_overlap=patch_overlap,
             save_dir=save_dir,
+            root_dir=root_dir,
             allow_empty=True
         )
         crop_annotation_empty = crop_annotation[crop_annotation.xmin==0]
@@ -111,7 +112,8 @@ def train(model, annotations, train_image_dir, checkpoint_dir, comet_project=Non
     
     if comet_project:
         comet_logger = CometLogger(project_name=comet_project, workspace=comet_workspace)
-        plot_names = visualize.plot_prediction_dataframe(df=annotations.head(5), root_dir=train_image_dir, savedir=tmpdir)
+        non_empty = annotations[~annotations.xmin.isnull()]
+        plot_names = visualize.plot_prediction_dataframe(df=non_empty.head(5), root_dir=train_image_dir, savedir=tmpdir)
         for plot_name in plot_names:
             comet_logger.experiment.log_image(os.path.join(tmpdir,plot_name))
         comet_logger.experiment.log_parameters(model.config)
