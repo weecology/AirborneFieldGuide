@@ -2,7 +2,7 @@
 
 # Remote server for image hosting
 user: 'ben'
-server_url: 'serenity.ifas.ufl.edu'
+host: 'serenity.ifas.ufl.edu'
 key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
 folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 
@@ -29,7 +29,7 @@ n_images: 10
 
 # Label studio
 label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "Everglades Airplane Model"
+label_studio_project_name: "Everglades Airplane Model"
 labels:
   - 'Great Egret'
   - 'Roseate Spoonbill'

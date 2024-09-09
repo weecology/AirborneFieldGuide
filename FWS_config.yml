@@ -2,7 +2,7 @@
 
 # Remote server for image hosting
 user: 'ben'
-server_url: 'serenity.ifas.ufl.edu'
+host: 'serenity.ifas.ufl.edu'
 key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
 folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 
@@ -23,10 +23,12 @@ annotation_csv:
 patch_size: 1500
 patch_overlap: 0.05
 min_score: 0.3
+pool_limit: 3000
 strategy: 'target-labels'
 # Number of images to select for annotation
 n_images: 30
 # Labels to include in the active learning
+
 target_labels:
   - "Wood Stork"
 
@@ -41,8 +43,8 @@ labels:
   - "Anhinga"
   - 
 # Label studio
-label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "Fish and Wildlife Everglades Flight"
+label_studio_url: "https://labelstudio.naturecast.org/"
+label_studio_project_name: "Fish and Wildlife Everglades Flight"
 
 # Debugging
 force_run: False

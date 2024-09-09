@@ -112,10 +112,9 @@ def train(model, annotations, train_image_dir, checkpoint_dir, comet_project=Non
     
     if comet_project:
         comet_logger = CometLogger(project_name=comet_project, workspace=comet_workspace)
-        non_empty = annotations[~annotations.xmin.isnull()]
-        plot_names = visualize.plot_prediction_dataframe(df=non_empty.head(5), root_dir=train_image_dir, savedir=tmpdir)
-        for plot_name in plot_names:
-            comet_logger.experiment.log_image(os.path.join(tmpdir,plot_name))
+        #plot_names = visualize.plot_prediction_dataframe(df=non_empty.head(5), root_dir=train_image_dir, savedir=tmpdir)
+        #for plot_name in plot_names:
+        comet_logger.experiment.log_image(os.path.join(tmpdir,plot_name))
         comet_logger.experiment.log_parameters(model.config)
         comet_logger.experiment.log_table("train.csv", annotations)
         checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_dir)

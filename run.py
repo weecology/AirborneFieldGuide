@@ -19,7 +19,7 @@ with open("/blue/ewhite/everglades/label_studio/label_studio_api_key.txt", "r") 
 os.environ["LABEL_STUDIO_API_KEY"] = api_key
 
 if args.gpus > 1:
-    client = start(gpus=args.gpus, mem_size="20GB")
+    client = start(gpus=args.gpus, mem_size="70GB")
     pipeline.config_pipeline(config=config, dask_client=client)
 else:
     pipeline.config_pipeline(config=config)

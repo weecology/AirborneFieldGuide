@@ -2,7 +2,7 @@
 
 # Remote server for image hosting
 user: 'ben'
-server_url: 'serenity.ifas.ufl.edu'
+host: 'serenity.ifas.ufl.edu'
 key_filename: '/home/b.weinstein/.ssh/id_rsa.pub'
 folder_name: '/pgsql/retrieverdash/everglades-label-studio/everglades-data'
 
@@ -33,9 +33,9 @@ target_labels:
 n_images: 2
 
 # Label studio
-label-studio-url: "https://labelstudio.naturecast.org/"
-label-studio-project: "MillionTrees"
+label_studio_url: "https://labelstudio.naturecast.org/"
+label_studio_project_name: "MillionTrees"
 
 # Debugging
-force_run: False
+force_run: True
 skip_train: True

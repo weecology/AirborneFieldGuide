@@ -8,32 +8,7 @@ import random
 import tempfile
 
 def config_pipeline(config, dask_client=None):
-    iterate(
-        checkpoint_dir=config["checkpoint_dir"],
-        images_to_annotate_dir=config["images_to_annotate_dir"],
-        annotated_images_dir=config["annotated_images_dir"],
-        model_checkpoint=config["model_checkpoint"],
-        user=config["user"],
-        host=config["server_url"],
-        test_csv=config["test_csv"],
-        train_csv_folder=config["train_csv_folder"],
-        folder_name=config["folder_name"],
-        key_filename=config["key_filename"],
-        annotation_csv=config["annotation_csv"],
-        patch_size=config["patch_size"],
-        patch_overlap=config["patch_overlap"],
-        label_studio_project_name=config["label-studio-project"],
-        label_studio_url=config["label-studio-url"],
-        force_run=config["force_run"],
-        skip_train=config["skip_train"],
-        min_score=config["min_score"],
-        n_images = config["n_images"],
-        strategy = config["strategy"],
-        labels = config["labels"],
-        target_labels = config["target_labels"],
-        comet_workspace=config["comet_workspace"],
-        comet_project=config["comet_project"],
-        dask_client=dask_client)
+    iterate(dask_client=dask_client, **config)
 
 def iterate(
         checkpoint_dir,
@@ -60,7 +35,8 @@ def iterate(
         target_labels=None,
         comet_workspace=None,
         comet_project=None,
-        labels=None):
+        labels=None,
+        pool_limit=1000):
     """A Deepforest pipeline for rapid annotation and model iteration.
 
     Args:
@@ -89,6 +65,7 @@ def iterate(
         n_images: The number of images to choose.
         dask_client: A dask distributed client for parallel prediction. Defaults to None.
         labels: A list of labels to filter by. Defaults to None.
+        pool_limit: The maximum number of images to consider. Defaults to 1000.
         comet_workspace: The comet workspace for logging. Defaults to None.
         comet_project: The comet project name for logging. Defaults to None.
     Returns:
@@ -208,15 +185,21 @@ def iterate(
             min_score=min_score,
             dask_client=dask_client,
             model_path=model_checkpoint,
-            target_labels=target_labels
+            target_labels=target_labels,
+            pool_limit=pool_limit
         )
 
         if len(images) == 0:
-            raise ValueError("No new images selected to annotate")
+             raise ValueError("No new images selected to annotate")
         
         # Predict images if annotations don't already exist
-        if os.path.exists(annotated_images_dir + "/annotations.csv"):
-            preannotations = read_file(pd.read_csv(annotated_images_dir + "/annotations.csv"), root_dir=annotated_images_dir)
+        if os.path.exists(images_to_annotate_dir + "/annotations.csv"):
+            all_preannotations = read_file(pd.read_csv(images_to_annotate_dir + "/annotations.csv"))
+            # Create a list of predictions for each image, only include images that are in the pool
+            preannotations = []
+            for image in images:
+                image_annotations = all_preannotations[all_preannotations["image_path"] == image]
+                preannotations.append(image_annotations)
         else:
             preannotations = model.predict(
                 m=m,
@@ -225,7 +208,7 @@ def iterate(
                 patch_size=patch_size,
                 patch_overlap=patch_overlap,
                 min_score=min_score,
-                dask_client=dask_client
+                dask_client=None
             )
             
         # Upload images to annotation platform

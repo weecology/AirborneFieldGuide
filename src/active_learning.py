@@ -5,7 +5,7 @@ from src import model
 import dask.array as da
 import pandas as pd
 
-def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_overlap=0.1, min_score=0.5, m=None, model_path=None, dask_client=None, target_labels=None):
+def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_overlap=0.1, min_score=0.5, m=None, model_path=None, dask_client=None, target_labels=None, pool_limit=1000):
     """Choose images to annotate.
     Args:
         evaluation (dict): A dictionary of evaluation metrics.
@@ -22,10 +22,14 @@ def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_o
         m (main.deepforest, optional): A trained deepforest model. Defaults to None. 
         model_path (str, optional): The path to the model checkpoint file. Defaults to None. Only used in combination with dask
         target_labels: (list, optional): A list of target labels to filter images by. Defaults to None.
+        pool_limit (int, optional): The maximum number of images to consider. Defaults to 1000.
     Returns:
         list: A list of image paths.
     """
     pool = glob.glob(os.path.join(image_dir,"*")) # Get all images in the data directory
+    # Remove .csv files from the pool
+    pool = [image for image in pool if not image.endswith('.csv')]
+    
     # Remove crop dir
     try:
         pool.remove(os.path.join(image_dir,"crops"))
@@ -33,8 +37,8 @@ def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_o
         pass
 
     #subsample
-    if len(pool) > 10000:
-        pool = random.sample(pool, 5000)
+    if len(pool) > pool_limit:
+        pool = random.sample(pool, pool_limit)
 
     if strategy=="random":
         chosen_images = random.sample(pool, n)
@@ -42,7 +46,7 @@ def choose_images(evaluation, image_dir, strategy, n=10, patch_size=512, patch_o
     elif strategy in ["most-detections","target-labels"]:
         # Predict all images
         if model_path is None:
-            raise ValueError("A model is required for the 'most-detections' strategy.")
+            raise ValueError("A model is required for the 'most-detections' or 'target-labels' strategy.")
         if dask_client:
             # load model on each client
             def update_sys_path():
