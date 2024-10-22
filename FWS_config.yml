@@ -11,7 +11,7 @@ comet_project: "everglades-airplane"
 
 # Model Training
 # Model checkpoints are saved in the checkpoint_dir, model_checkpoint is the path to the model checkpoint and is honored first
-model_checkpoint: '/blue/ewhite/everglades/Zooniverse//20230426_082517/species_model.pl'
+model_checkpoint: /blue/ewhite/everglades/Zooniverse//20230426_082328/species_model.pl
 test_csv:
 images_to_annotate_dir: '/blue/ewhite/everglades/FWSImaging2024/JPG_20240417_UFL'
 checkpoint_dir: '/blue/ewhite/everglades/label_studio/FWS/checkpoints'
@@ -20,17 +20,17 @@ train_csv_folder: /blue/ewhite/everglades/label_studio/FWS/annotated_images/csvs
 # Active learning
 annotated_images_dir: '/blue/ewhite/everglades/label_studio/FWS/annotated_images'
 annotation_csv:
-patch_size: 1500
-patch_overlap: 0.05
-min_score: 0.3
-pool_limit: 3000
+patch_size: 2000
+patch_overlap: 0
+min_score: 0.4
+pool_limit: 20000
 strategy: 'target-labels'
 # Number of images to select for annotation
-n_images: 30
+n_images: 100
 # Labels to include in the active learning
 
 target_labels:
-  - "Wood Stork"
+  - "Roseate Spoonbill"
 
 # Filter labels, use 'None' to include all labels, use blank to have background class with no labels in images
 labels:
@@ -47,5 +47,5 @@ label_studio_url: "https://labelstudio.naturecast.org/"
 label_studio_project_name: "Fish and Wildlife Everglades Flight"
 
 # Debugging
-force_run: False
+force_run: True
 skip_train: False

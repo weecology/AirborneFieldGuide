@@ -5,9 +5,18 @@ from src.cluster import start
 import argparse
 
 # Read config
+class ParseKwargs(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, dict())
+        for value in values:
+            key, value = value.split('=')
+            getattr(namespace, self.dest)[key] = value
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("project_name", help="Name of the project")
 parser.add_argument("--gpus", type=int, default=1, help="Number of GPUs to use")
+parser.add_argument("--kwargs", type=str, help="Additional keyword arguments for DeepForest in key=value format", nargs='*')
 args = parser.parse_args()
 
 config_file = args.project_name + "_config.yml"

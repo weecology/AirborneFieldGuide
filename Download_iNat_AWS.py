@@ -4,33 +4,20 @@ import csv
 import os
 import dask.dataframe as dd
 from distributed import Client
+import pandas as pd
 
 client = Client(processes=False)
 
-def download_and_load_csv(url, local_path):
-    # Download the CSV file if it doesn't already exist
-    if not os.path.exists(local_path):
-        response = requests.get(url)
-        with open(local_path, 'wb') as f:
-            f.write(response.content)
-
-    # Unzip the CSV file if the unzipped version doesn't already exist
-    unzipped_path = local_path[:-3]
-    if not os.path.exists(unzipped_path):
-        with gzip.open(local_path, 'rb') as f_in:
-            with open(unzipped_path, 'wb') as f_out:
-                f_out.write(f_in.read())
-
-    # Load the CSV file with Dask
-    df = dd.read_csv(unzipped_path)
-    return df
+# Step 0, download the CSV file and gzip
+# aws s3 cp s3://inaturalist-open-data/photos.csv.gz /blue/ewhite/b.weinstein/BOEM/iNat
+# gzip -d photos.csv.gz
 
 # Example usage
-csv_url = 'https://inaturalist-open-data.s3.amazonaws.com/photos.csv.gz'
-local_csv_path = 'photos.csv.gz'
-df = download_and_load_csv(csv_url, local_csv_path)
+local_csv_path = '/blue/ewhite/b.weinstein/BOEM/iNat/photos.csv'
 
-def download_images(species, num_images, output_dir):
+def download_images(species, num_images, output_dir,local_csv_path):
+    client = Client(processes=False)
+
     # Ensure the output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -40,10 +27,7 @@ def download_images(species, num_images, output_dir):
     if not os.path.exists(species_dir):
         os.makedirs(species_dir)
 
-    # URL for the photos.csv.gz file
-    csv_url = 'https://inaturalist-open-data.s3.amazonaws.com/photos.csv.gz'
-    # Load the CSV file with Dask
-    df = download_and_load_csv(csv_url, local_csv_path)
+    df = dd.read_csv(local_csv_path)
 
     # Filter the dataframe for the specified species
     filtered_df = df[df['species'] == species].head(num_images, compute=True)
@@ -63,3 +47,9 @@ def download_images(species, num_images, output_dir):
 
 # Example usage for Parasitic Jaeger (Stercorarius parasiticus)
 download_images('Stercorarius parasiticus', 5)
+
+# read in a csv, loop through species and download images
+species_df = pd.read_csv(local_csv_path)
+species_list = species_df['species'].unique()
+for species in species_list:
+    download_images(species, 5)
